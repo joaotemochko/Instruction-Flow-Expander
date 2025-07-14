@@ -32,17 +32,15 @@ To expand and organize the instruction stream after the fetch stage by providing
 ```
 ife/
 ├── src/
-│   ├── ife_controller.sv       # Main control logic
-│   ├── ife_decoder.sv          # Instruction decoder
-│   ├── ife_dispatcher.sv       # Instruction dispatch logic
-│   └── ife_pkg.sv              # Types, parameters, macros
-├── testbench/
-│   ├── ife_tb.sv               # Main testbench
-│   └── test_vectors.sv         # Test cases
+│   ├── ife_block_queue.sv
+│   ├── ife_commit_unit.sv
+│   ├── ife_dependence_checker.sv 
+|   ├── ife_dispatch_unit.sv
+│   └── ife_monitor.sv
 ├── docs/
-│   └── ife_spec.md             # Technical specification
+│   └── ife_spec.md
 ├── README.md
-└── Makefile                    # Build and simulation
+|
 ```
 
 ---
