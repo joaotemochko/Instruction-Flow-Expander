@@ -1,43 +1,69 @@
+`ifndef IFE_BLOCK_QUEUE_SV
+`define IFE_BLOCK_QUEUE_SV
+
 module ife_block_queue #(
-    parameter BLOCK_WIDTH = 128,
-    parameter QUEUE_DEPTH = 8
+  parameter int BLOCK_ID_WIDTH = 8,
+  parameter int INSTR_WIDTH = 32,
+  parameter int BLOCK_SIZE = 4  // número de instruções por bloco
 )(
-    input  logic                 clk,
-    input  logic                 rst,
-    input  logic                 push,
-    input  logic                 pop,
-    input  logic [BLOCK_WIDTH-1:0] in_block,
-    output logic [BLOCK_WIDTH-1:0] out_block,
-    output logic                 full,
-    output logic                 empty
+  input  logic clk,
+  input  logic rst,
+
+  // Entrada de bloco
+  input  logic [BLOCK_ID_WIDTH-1:0] block_id_in,
+  input  logic [BLOCK_SIZE-1:0][INSTR_WIDTH-1:0] block_in,
+  input  logic valid_in,
+  output logic ready_in,
+
+  // Saída para próxima etapa
+  output logic [BLOCK_ID_WIDTH-1:0] block_id_out,
+  output logic [BLOCK_SIZE-1:0][INSTR_WIDTH-1:0] block_out,
+  output logic valid_out,
+  input  logic ready_downstream
 );
 
-    logic [BLOCK_WIDTH-1:0] queue [0:QUEUE_DEPTH-1];
-    logic [$clog2(QUEUE_DEPTH):0] head, tail;
-    logic [$clog2(QUEUE_DEPTH+1):0] count;
+  // Estrutura da fila
+  typedef struct packed {
+    logic [BLOCK_ID_WIDTH-1:0] id;
+    logic [BLOCK_SIZE-1:0][INSTR_WIDTH-1:0] instrs;
+  } block_t;
 
-    assign full  = (count == QUEUE_DEPTH);
-    assign empty = (count == 0);
+  localparam int QUEUE_DEPTH = 8;
 
-    assign out_block = (empty) ? '0 : queue[head];
+  block_t queue[QUEUE_DEPTH];
+  logic [$clog2(QUEUE_DEPTH):0] head, tail;
+  logic full, empty;
 
-    always_ff @(posedge clk or posedge rst) begin
-        if (rst) begin
-            head  <= 0;
-            tail  <= 0;
-            count <= 0;
-        end else begin
-            if (push && !full) begin
-                queue[tail] <= in_block;
-                tail <= (tail + 1) % QUEUE_DEPTH;
-                count <= count + 1;
-            end
+  // Controle de fila
+  always_ff @(posedge clk or posedge rst) begin
+    if (rst) begin
+      head <= 0;
+      tail <= 0;
+    end else begin
+      // Escrita
+      if (valid_in && !full) begin
+        queue[tail].id     <= block_id_in;
+        queue[tail].instrs <= block_in;
+        tail <= tail + 1;
+      end
 
-            if (pop && !empty) begin
-                head <= (head + 1) % QUEUE_DEPTH;
-                count <= count - 1;
-            end
-        end
+      // Leitura
+      if (valid_out && ready_downstream && !empty) begin
+        head <= head + 1;
+      end
     end
+  end
+
+  // Estado da fila
+  assign full  = (tail - head) == QUEUE_DEPTH;
+  assign empty = (tail == head);
+
+  // Interface de controle
+  assign ready_in   = !full;
+  assign valid_out  = !empty;
+  assign block_out  = queue[head].instrs;
+  assign block_id_out = queue[head].id;
 
 endmodule
+
+`endif
