@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 `ifndef IFE_DEPENDENCE_CHECKER_SV
 `define IFE_DEPENDENCE_CHECKER_SV
 

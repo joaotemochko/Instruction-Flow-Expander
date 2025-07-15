@@ -1,9 +1,4 @@
-`include "ife_block_queue.sv"
-`include "ife_dependence_checker.sv"
-`include "ife_dispatch_unit.sv"
-`include "ife_monitor.sv"
-`include "ife_commit_unit.sv"
-`include "ife_bypass_path.sv"
+`timescale 1ns/1ps
 
 module ife_top #(
   parameter BLOCK_ID_WIDTH = 8,
@@ -11,7 +6,7 @@ module ife_top #(
   parameter BLOCK_SIZE = 4,
   parameter NUM_CORES = 4,
   parameter NUM_REGS = 32,
-  parameter REG_WIDTH = 32
+  parameter REG_WIDTH = 64
 )(
   input  logic clk,
   input  logic rst,
@@ -25,14 +20,18 @@ module ife_top #(
   input  logic [NUM_CORES-1:0] core_busy,
 
   // Resultados retornados dos núcleos paralelos
-  input  logic [NUM_REGS-1:0][REG_WIDTH-1:0] core_result_0,
-  input  logic [NUM_REGS-1:0][REG_WIDTH-1:0] core_result_1,
+  input  logic [REG_WIDTH-1:0] core_result_0 [NUM_REGS-1:0],
+  input  logic [REG_WIDTH-1:0] core_result_1 [NUM_REGS-1:0],
   input  logic commit_valid_in,
 
   // Saída para caminho serial (fallback)
   output logic [BLOCK_ID_WIDTH-1:0] serial_block_id,
   output logic [BLOCK_SIZE-1:0][INSTR_WIDTH-1:0] serial_block_data,
-  output logic serial_valid
+  output logic serial_valid,
+  output logic [3:0][31:0] block_out_parallel,
+  output logic [7:0] block_id_out_parallel,
+  output logic [3:0] dispatch_parallel_out
+
 );
 
   // Interconexões internas
@@ -42,12 +41,13 @@ module ife_top #(
   logic ready_in;
   assign ready_in = 1'b1;
 
+  logic [3:0] dispatch_parallel;
+
   logic is_safe;
   logic [NUM_CORES-1:0] core_idle_mask;
 
   logic [BLOCK_ID_WIDTH-1:0] block_id_parallel;
   logic [BLOCK_SIZE-1:0][INSTR_WIDTH-1:0] block_data_parallel;
-  logic [NUM_CORES-1:0] dispatch_parallel;
   logic valid_parallel;
 
   logic [BLOCK_ID_WIDTH-1:0] block_id_serial_dispatch;
@@ -153,5 +153,9 @@ module ife_top #(
   assign serial_block_id   = bypass_block_id;
   assign serial_block_data = bypass_block_data;
   assign serial_valid      = bypass_valid;
+  assign block_out_parallel = block_data_parallel;
+  assign block_id_out_parallel = block_id_parallel;
+  assign dispatch_parallel_out = dispatch_parallel;
+
 
 endmodule

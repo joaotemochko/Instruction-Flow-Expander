@@ -4,7 +4,7 @@
 module ife_commit_unit #(
   parameter int BLOCK_ID_WIDTH = 8,
   parameter int NUM_REGS = 32,
-  parameter int REG_WIDTH = 32
+  parameter int REG_WIDTH = 64
 )(
   input  logic clk,
   input  logic rst,
@@ -12,8 +12,8 @@ module ife_commit_unit #(
   input  logic valid_in,
   input  logic [BLOCK_ID_WIDTH-1:0] block_id,
 
-  input  logic [NUM_REGS-1:0][REG_WIDTH-1:0] result_core_0,
-  input  logic [NUM_REGS-1:0][REG_WIDTH-1:0] result_core_1,
+  input  logic [REG_WIDTH-1:0] result_core_0 [NUM_REGS-1:0],
+  input  logic [REG_WIDTH-1:0] result_core_1 [NUM_REGS-1:0],
 
   output logic commit_ok,
   output logic commit_fail,
