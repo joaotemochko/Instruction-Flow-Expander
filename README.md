@@ -82,4 +82,4 @@ The IFE architecture shines in domains such as decompression, game logic, and re
 
 ## 📄 License & Contributions
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
