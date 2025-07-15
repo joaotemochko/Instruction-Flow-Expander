@@ -1,95 +1,85 @@
-# 🧠 Instruction Flow Expander (IFE)
+# Instruction Flow Expander (IFE) Architecture
 
-The **Instruction Flow Expander (IFE)** is a microarchitecture component developed in **SystemVerilog**, designed to expand the instruction flow in parallel or out-of-order execution cores. It aims to increase pipeline throughput and efficiency.
+## 🧠 Overview
 
-This module is part of the **Alchemist** architecture but can be integrated into any CPU project with support for parallel execution, out-of-order (OoO) pipelines, or multiple functional units.
-
----
-
-## 🚀 Purpose
-
-To expand and organize the instruction stream after the fetch stage by providing:
-
-- Parallel decoding of multiple instructions
-- Distribution to issue queues or functional units
-- Basic dependency detection
-- Support for multi-issue cores (dual or more)
+The Instruction Flow Expander (IFE) is a microarchitecture component designed to optimize the execution of predominantly sequential programs. It intelligently exploits implicit parallelism through dynamic and safe duplication of instruction blocks, enabling parallel execution on idle cores. The architecture ensures correctness via conditional commits, resulting in notable performance gains, especially for applications that lack explicit parallelism.
 
 ---
 
-## 🛠️ Technologies Used
+## ⚙️ Architecture Components
 
-- **SystemVerilog** — RTL hardware description
-- **Icarus Verilog** / **Verilator** — simulation
-- **Yosys** + **Surelog** — SystemVerilog parsing and synthesis
-- **GTKWave** — waveform visualization (VCD)
-- (Optional) **Core-V-Verif** — verification framework
-
----
-
-## 📁 Project Structure
-
-```
-ife/
-├── src/
-│   ├── ife_block_queue.sv
-│   ├── ife_commit_unit.sv
-│   ├── ife_dependence_checker.sv 
-|   ├── ife_dispatch_unit.sv
-│   └── ife_monitor.sv
-├── docs/
-│   └── ife_spec.md
-├── README.md
-|
-```
+| Module              | Description                                                                 |
+|---------------------|-----------------------------------------------------------------------------|
+| `IFE_BlockQueue`     | Stores newly decoded instruction blocks awaiting analysis                  |
+| `IFE_DependenceChecker` | Performs conservative dependency checks (RAW, WAR, WAW)               |
+| `IFE_DispatchUnit`   | Dispatches duplicated blocks to available cores, considering load          |
+| `IFE_Monitor`        | Tracks core state to identify parallelism opportunities                    |
+| `IFE_CommitUnit`     | Compares parallel execution results and performs conditional commits       |
+| `IFE_ResourceMonitor`| Oversees system resource usage and disables IFE under critical contention  |
+| `IFE_BypassPath`     | Provides a serial fallback path when duplication isn’t viable              |
 
 ---
 
-## ⚙️ How to Use
+## 🧩 Functional Layers per Module
 
-### 💡 Integration
+- **IFE_BlockQueue**
+  - Basic: FIFO input queue
+  - Functional: Regulates block flow and synchronizes pipeline stages
+  - Technical: Enables efficient scheduling and prevents excessive queuing
 
-The IFE module can be instantiated as part of the decode or dispatch stage in any multi-issue pipeline.
+- **IFE_DependenceChecker**
+  - Basic: Safety verifier
+  - Functional: Detects dependencies and side effects
+  - Technical: Leverages semantic and conservative static analysis
 
----
+- **IFE_DispatchUnit**
+  - Basic: Block dispatch control
+  - Functional: Allocates duplicated blocks based on availability
+  - Technical: Uses adaptive load-balancing heuristics
 
-## 📚 Documentation
+- **IFE_Monitor**
+  - Basic: Core sensor interface
+  - Functional: Reports availability for parallel execution
+  - Technical: Measures core load, latency, and context state
 
-Detailed technical documentation is available at [`docs/ife_spec.md`](docs/ife_spec.md), including:
+- **IFE_CommitUnit**
+  - Basic: Results validator
+  - Functional: Ensures correctness prior to commit
+  - Technical: Re-executes blocks if divergence is detected (fault tolerance)
 
-- Interface (inputs/outputs)
-- Communication protocols
-- Latency and throughput
-- Example usage
+- **IFE_ResourceMonitor**
+  - Basic: System control unit
+  - Functional: Deactivates duplication under resource pressure
+  - Technical: Evaluates dynamic thresholds of consumption and priority
 
----
-
-## ✅ Status
-
-- [ ] Basic structure implemented
-- [ ] Functional testbench
-- [ ] Register renaming support
-- [ ] Priority-based dispatch optimization
-- [ ] Integration with Reorder Buffer
-
----
-
-## 🧪 Roadmap
-
-- Support for compressed instructions (RVC)
-- Advanced RAW/WAW/WAR hazard detection
-- Reorder buffer awareness
-- Parametrizable issue width (dual, quad, etc.)
-
----
-
-## 🤝 Contributing
-
-At the moment, only my contributions are accepted, when implemented and tested I will accept new contributions.
+- **IFE_BypassPath**
+  - Basic: Safe execution alternative
+  - Functional: Maintains flow under saturation
+  - Technical: Reduces latency and provides automatic fallback
 
 ---
 
-## 📄 License
+## 🧮 Operational Decision Matrix
+
+| Execution Condition                   | IFE Active | Restricted Mode | IFE Disabled |
+|--------------------------------------|------------|-----------------|--------------|
+| Single-threaded sequential code      | ✅         |                 |              |
+| Blocks with side effects             | ✅         |                 |              |
+| Intensive use of shared memory       |            |                 | ✅           |
+| Multi-threaded intensive applications|            | ✅              |              |
+| System under resource contention     |            | ✅              | ✅           |
+| Low system load                      | ✅         |                 |              |
+| Predominantly read-only operations   | ✅         |                 |              |
+| Presence of unpredictable I/O        |            |                 | ✅           |
+
+---
+
+## 🎯 Target Applications
+
+The IFE architecture shines in domains such as decompression, game logic, and rendering — scenarios where single-core bottlenecks often limit performance. Its modular design, adaptive heuristics, and robust validation mechanisms position it as an innovative solution for both academic research and industrial deployment.
+
+---
+
+## 📄 License & Contributions
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
