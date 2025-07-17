@@ -4,7 +4,7 @@ module ife_top #(
   parameter BLOCK_ID_WIDTH = 8,
   parameter INSTR_WIDTH = 32,
   parameter BLOCK_SIZE = 4,
-  parameter NUM_CORES = 4,
+  parameter NUM_CORES = 2,
   parameter NUM_REGS = 32,
   parameter REG_WIDTH = 64
 )(
@@ -28,9 +28,9 @@ module ife_top #(
   output logic [BLOCK_ID_WIDTH-1:0] serial_block_id,
   output logic [BLOCK_SIZE-1:0][INSTR_WIDTH-1:0] serial_block_data,
   output logic serial_valid,
-  output logic [3:0][31:0] block_out_parallel,
+  output logic [3:0][31:0] block_out_parallel [1:0],
   output logic [7:0] block_id_out_parallel,
-  output logic [3:0] dispatch_parallel_out
+  output logic [NUM_CORES-1:0] dispatch_parallel_out
 
 );
 
@@ -41,13 +41,13 @@ module ife_top #(
   logic ready_in;
   assign ready_in = 1'b1;
 
-  logic [3:0] dispatch_parallel;
+  logic [NUM_CORES-1:0] dispatch_parallel;
 
   logic is_safe;
   logic [NUM_CORES-1:0] core_idle_mask;
 
   logic [BLOCK_ID_WIDTH-1:0] block_id_parallel;
-  logic [BLOCK_SIZE-1:0][INSTR_WIDTH-1:0] block_data_parallel;
+  logic [BLOCK_SIZE-1:0][INSTR_WIDTH-1:0] block_data_parallel [1:0];
   logic valid_parallel;
 
   logic [BLOCK_ID_WIDTH-1:0] block_id_serial_dispatch;
@@ -78,16 +78,6 @@ module ife_top #(
     .ready_downstream(1'b1)
   );
 
-  ife_dependence_checker #(
-    .INSTR_WIDTH(INSTR_WIDTH),
-    .REG_ADDR_WIDTH(5),
-    .BLOCK_SIZE(BLOCK_SIZE)
-  ) u_depcheck (
-    .instrs_in(q_block_out),
-    .valid_in({BLOCK_SIZE{1'b1}}),
-    .is_safe(is_safe)
-  );
-
   ife_monitor #(
     .NUM_CORES(NUM_CORES)
   ) u_monitor (
@@ -98,24 +88,18 @@ module ife_top #(
   );
 
   ife_dispatch_unit #(
-    .BLOCK_ID_WIDTH(BLOCK_ID_WIDTH),
-    .INSTR_WIDTH(INSTR_WIDTH),
     .BLOCK_SIZE(BLOCK_SIZE),
     .NUM_CORES(NUM_CORES)
   ) u_dispatch (
-    .clk(clk), .rst(rst),
+    .clk(clk),
+    .rst(rst),
+    .block_data_in(q_block_out),
     .block_id_in(q_block_id_out),
-    .block_in(q_block_out),
-    .valid_in(q_valid_out),
-    .is_safe(is_safe),
-    .core_idle_mask(core_idle_mask),
-    .block_id_out_parallel(block_id_parallel),
-    .block_out_parallel(block_data_parallel),
-    .dispatch_parallel(dispatch_parallel),
-    .valid_parallel(valid_parallel),
-    .block_id_out_serial(block_id_serial_dispatch),
-    .block_out_serial(block_data_serial_dispatch),
-    .valid_serial(valid_serial_dispatch)
+    .block_valid_in(q_valid_out),
+    .core_busy(core_busy),
+    .dispatch_valid(dispatch_parallel),
+    .dispatch_data(block_data_parallel),
+    .dispatch_block_id(block_id_parallel)
   );
 
   ife_commit_unit #(
@@ -140,7 +124,7 @@ module ife_top #(
   ) u_bypass (
     .clk(clk), .rst(rst),
     .block_id_in(valid_serial_dispatch ? block_id_serial_dispatch : block_id_parallel),
-    .block_in(valid_serial_dispatch ? block_data_serial_dispatch : block_data_parallel),
+    .block_in(valid_serial_dispatch ? block_data_serial_dispatch : ext_block_data),
     .valid_in(valid_serial_dispatch || reexecute_serial),
     .from_dispatch(valid_serial_dispatch),
     .from_commit(reexecute_serial),

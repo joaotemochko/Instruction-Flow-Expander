@@ -1,65 +1,42 @@
-`ifndef IFE_DISPATCH_UNIT_SV
-`define IFE_DISPATCH_UNIT_SV
+`timescale 1ns/1ps
 
 module ife_dispatch_unit #(
-  parameter BLOCK_ID_WIDTH = 8,
-  parameter INSTR_WIDTH = 32,
-  parameter BLOCK_SIZE = 4,
-  parameter NUM_CORES = 4
+  parameter int BLOCK_SIZE = 4,
+  parameter int NUM_CORES  = 2
 )(
   input  logic clk,
   input  logic rst,
 
-  input  logic [BLOCK_ID_WIDTH-1:0] block_id_in,
-  input  logic [BLOCK_SIZE-1:0][INSTR_WIDTH-1:0] block_in,
-  input  logic valid_in,
-  input  logic is_safe,
-  input  logic [NUM_CORES-1:0] core_idle_mask,
+  // Até 2 blocos disponíveis (FIFO ou monitor fornece)
+  input  logic [BLOCK_SIZE-1:0][31:0] block_data_in,
+  input  logic [7:0] block_id_in,
+  input  logic block_valid_in,
 
-  output logic [BLOCK_ID_WIDTH-1:0] block_id_out_parallel,
-  output logic [BLOCK_SIZE-1:0][INSTR_WIDTH-1:0] block_out_parallel,
-  output logic [NUM_CORES-1:0] dispatch_parallel,
-  output logic valid_parallel,
+  // Status dos núcleos
+  input  logic [NUM_CORES-1:0] core_busy,
 
-  output logic [BLOCK_ID_WIDTH-1:0] block_id_out_serial,
-  output logic [BLOCK_SIZE-1:0][INSTR_WIDTH-1:0] block_out_serial,
-  output logic valid_serial
+  // Sinais de despacho por núcleo
+  output logic [NUM_CORES-1:0] dispatch_valid,
+  output logic [BLOCK_SIZE-1:0][31:0] dispatch_data [1:0],
+  output logic [7:0] dispatch_block_id
 );
 
-  logic dispatching;
+  integer i;
 
   always_comb begin
-    dispatch_parallel = '0;
-    valid_parallel = 1'b0;
-    valid_serial   = 1'b0;
+    for (i = 0; i < NUM_CORES; i++) begin
+      dispatch_valid[i]     = 1'b0;
+      dispatch_data[i]      = '0;
+      dispatch_block_id  = '0;
 
-    if (valid_in && is_safe) begin
-      // Encontrar o primeiro core ocioso
-      for (int i = 0; i < NUM_CORES; i++) begin
-        if (core_idle_mask[i]) begin
-          dispatch_parallel[i] = 1'b1;
-          valid_parallel = 1'b1;
-          break;
+      if (!core_busy[i]) begin
+        for (int j = 0; j < BLOCK_SIZE / 2; j++) begin
+          dispatch_valid[i]     = 1'b1;
+          dispatch_data[i][j]      = block_data_in[i + j * 2];
+          dispatch_block_id  = block_id_in;
         end
       end
-
-      if (!valid_parallel) begin
-        // Sem núcleos disponíveis => fallback para execução serial
-        valid_serial = 1'b1;
-      end
-
-    end else if (valid_in && !is_safe) begin
-      // Bloco não é seguro para duplicação => execução serial
-      valid_serial = 1'b1;
     end
   end
 
-  // Dados de saída
-  assign block_id_out_parallel = block_id_in;
-  assign block_out_parallel    = block_in;
-  assign block_id_out_serial   = block_id_in;
-  assign block_out_serial      = block_in;
-
 endmodule
-
-`endif

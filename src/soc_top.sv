@@ -29,13 +29,13 @@ module soc_top (
   assign core_results1 = regfile1;
   assign commit_valid = commit_ready0 & commit_ready1;
 
-  logic [3:0] core_busy;
+  logic [1:0] core_busy;
   assign core_busy[0] = busy0;
   assign core_busy[1] = busy1;
 
-  logic [3:0][31:0] block_out_parallel;
+  logic [3:0][31:0] block_out_parallel [1:0];
   logic [7:0] block_id_out_parallel;
-  logic [3:0] dispatch_parallel;
+  logic [1:0] dispatch_parallel;
 
   // Instância do IFE
   ife_top u_ife (
@@ -60,9 +60,9 @@ module soc_top (
   nebula_core u_nebula0 (
     .clk(clk),
     .rst_n(~rst),
-    .block_valid(dispatch_parallel[0] || serial_valid),
-    .block_data_in(serial_valid ? serial_block_data : block_out_parallel),
-    .block_id(serial_valid ? serial_block_id : block_id_out_parallel),
+    .block_valid(dispatch_parallel[0]),
+    .block_data_in(serial_valid ? serial_block_data : block_out_parallel[0]),
+    .block_id(block_id_out_parallel),
     .commit_ready(commit_ready0),
     .regfile_out(regfile0),
     .busy(busy0),
@@ -116,7 +116,7 @@ module soc_top (
     .clk(clk),
     .rst_n(~rst),
     .block_valid(dispatch_parallel[1]),
-    .block_data_in(block_out_parallel),
+    .block_data_in(serial_valid && core_busy[0] ? serial_block_data : block_out_parallel[1]),
     .block_id(block_id_out_parallel),
     .commit_ready(commit_ready1),
     .regfile_out(regfile1),

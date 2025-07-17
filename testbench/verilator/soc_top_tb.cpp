@@ -33,11 +33,11 @@ int main(int argc, char **argv, char **env) {
     top->block_id_in = 0x01;
     top->block_data_in[0] = 0x00500513; // ADDI x10, x0, 5
     top->block_data_in[1] = 0x00300593; // ADDI x11, x0, 3
-    top->block_data_in[2] = 0x00000013;
-    top->block_data_in[3] = 0x00000013;
+    top->block_data_in[2] = 0x00600593; // ADDI x11, x0, 6
+    top->block_data_in[3] = 0x00700513; // ADDI x10, x0, 7
     top->block_valid_in = 1;
 
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 10; i++) {
         top->clk = !top->clk;
         top->eval();
         tfp->dump(main_time);

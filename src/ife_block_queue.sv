@@ -5,7 +5,8 @@ module ife_block_queue #(
   parameter int BLOCK_ID_WIDTH = 8,
   parameter int INSTR_WIDTH = 32,
   parameter int BLOCK_SIZE = 4,
-  parameter int QUEUE_DEPTH = 8
+  parameter int QUEUE_DEPTH = 8,
+  parameter int NUM_CORES = 2
 )(
   input  logic clk,
   input  logic rst,
