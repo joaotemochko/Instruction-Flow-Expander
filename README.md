@@ -66,7 +66,7 @@ The Instruction Flow Expander (IFE) is a microarchitecture component designed to
 | Single-threaded sequential code      | ✅         |                 |              |
 | Blocks with side effects             | ✅         |                 |              |
 | Intensive use of shared memory       |            |                 | ✅           |
-| Multi-threaded intensive applications|            | ✅              |              |
+| Multi-threaded intensive applications|            |                 | ✅           |
 | System under resource contention     |            | ✅              | ✅           |
 | Low system load                      | ✅         |                 |              |
 | Predominantly read-only operations   | ✅         |                 |              |
