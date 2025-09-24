@@ -1,19 +1,15 @@
-`include "ife_top.sv"
-`include "nebula_core_with_ife.sv"
-`include "shared_dual_port_ram.sv"
-
 module soc_top (
-  input  logic clk,
-  input  logic rst,
+  input  wire clk,
+  input  wire rst,
 
   // Entrada externa para alimentar o IFE com blocos
-  input  logic [7:0] block_id_in,
-  input  logic [3:0][31:0] block_data_in,
-  input  logic block_valid_in
+  input  wire [7:0] block_id_in,
+  input  wire [3:0][31:0] block_data_in,
+  input  wire block_valid_in
 );
 
-  logic [63:0] regfile0 [31:0];
-  logic [63:0] regfile1 [31:0];
+  logic [63:0] regfile0 [0:31];
+  logic [63:0] regfile1 [0:31];
   logic commit_ready0, commit_ready1;
   logic busy0, busy1;
 
@@ -59,9 +55,9 @@ module soc_top (
   // Nebula Core 0
   nebula_core u_nebula0 (
     .clk(clk),
-    .rst_n(~rst),
+    .rst_n(rst),
     .block_valid(dispatch_parallel[0]),
-    .block_data_in(serial_valid ? serial_block_data : block_out_parallel[0]),
+    .block_data_in(serial_valid && !core_busy[0] ? serial_block_data : block_out_parallel[1]),
     .block_id(block_id_out_parallel),
     .commit_ready(commit_ready0),
     .regfile_out(regfile0),
@@ -114,9 +110,9 @@ module soc_top (
   // Nebula Core 1
   nebula_core u_nebula1 (
     .clk(clk),
-    .rst_n(~rst),
+    .rst_n(rst),
     .block_valid(dispatch_parallel[1]),
-    .block_data_in(serial_valid && core_busy[0] ? serial_block_data : block_out_parallel[1]),
+    .block_data_in(serial_valid && core_busy[0] && !core_busy[1] ? serial_block_data : block_out_parallel[1]),
     .block_id(block_id_out_parallel),
     .commit_ready(commit_ready1),
     .regfile_out(regfile1),

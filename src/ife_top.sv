@@ -1,5 +1,3 @@
-`timescale 1ns/1ps
-
 module ife_top #(
   parameter BLOCK_ID_WIDTH = 8,
   parameter INSTR_WIDTH = 32,
@@ -8,21 +6,21 @@ module ife_top #(
   parameter NUM_REGS = 32,
   parameter REG_WIDTH = 64
 )(
-  input  logic clk,
-  input  logic rst,
+  input  wire clk,
+  input  wire rst,
 
   // Entrada externa de bloco de instruções
-  input  logic [BLOCK_ID_WIDTH-1:0] ext_block_id,
-  input  logic [BLOCK_SIZE-1:0][INSTR_WIDTH-1:0] ext_block_data,
-  input  logic ext_block_valid,
+  input  wire [BLOCK_ID_WIDTH-1:0] ext_block_id,
+  input  wire [BLOCK_SIZE-1:0][INSTR_WIDTH-1:0] ext_block_data,
+  input  wire ext_block_valid,
 
   // Status dos núcleos (de fora da CPU)
-  input  logic [NUM_CORES-1:0] core_busy,
+  input  wire [NUM_CORES-1:0] core_busy,
 
   // Resultados retornados dos núcleos paralelos
-  input  logic [REG_WIDTH-1:0] core_result_0 [NUM_REGS-1:0],
-  input  logic [REG_WIDTH-1:0] core_result_1 [NUM_REGS-1:0],
-  input  logic commit_valid_in,
+  input  wire [REG_WIDTH-1:0] core_result_0 [NUM_REGS-1:0],
+  input  wire [REG_WIDTH-1:0] core_result_1 [NUM_REGS-1:0],
+  input  wire commit_valid_in,
 
   // Saída para caminho serial (fallback)
   output logic [BLOCK_ID_WIDTH-1:0] serial_block_id,
@@ -67,7 +65,7 @@ module ife_top #(
     .INSTR_WIDTH(INSTR_WIDTH),
     .BLOCK_SIZE(BLOCK_SIZE)
   ) u_block_queue (
-    .clk(clk), .rst(rst),
+    .clk(clk), .rst_n(rst),
     .block_id_in(ext_block_id),
     .block_in(ext_block_data),
     .valid_in(ext_block_valid),

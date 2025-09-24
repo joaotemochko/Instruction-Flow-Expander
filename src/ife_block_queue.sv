@@ -9,7 +9,7 @@ module ife_block_queue #(
   parameter int NUM_CORES = 2
 )(
   input  logic clk,
-  input  logic rst,
+  input  logic rst_n,
 
   // Entrada
   input  logic [BLOCK_ID_WIDTH-1:0] block_id_in,
@@ -44,23 +44,19 @@ assign full  = (count == count_t'(QUEUE_DEPTH));
 assign empty = (count == 0);
 
   // Escrita
-  always_ff @(posedge clk or posedge rst) begin
-    if (rst) begin
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
       tail <= '0;
+      head <= '0;
     end else if (valid_in && !full) begin
       queue[tail].id     <= block_id_in;
       queue[tail].instrs <= block_in;
       tail <= tail + 1;
-    end
-  end
-
-  // Leitura
-  always_ff @(posedge clk or posedge rst) begin
-    if (rst) begin
-      head <= '0;
-    end else if (valid_out && ready_downstream && !empty) begin
-      head <= head + 1;
-    end
+      
+      if (valid_out && ready_downstream && !empty) begin
+        head <= head + 1;
+      end
+     end
   end
 
   // Sinais externos
