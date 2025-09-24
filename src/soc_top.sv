@@ -57,7 +57,7 @@ module soc_top (
     .clk(clk),
     .rst_n(rst),
     .block_valid(dispatch_parallel[0]),
-    .block_data_in(serial_valid && !core_busy[0] ? serial_block_data : block_out_parallel[1]),
+    .block_data_in(serial_valid && !core_busy[0] ? serial_block_data : block_out_parallel[0]),
     .block_id(block_id_out_parallel),
     .commit_ready(commit_ready0),
     .regfile_out(regfile0),
