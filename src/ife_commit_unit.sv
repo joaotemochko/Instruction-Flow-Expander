@@ -27,7 +27,7 @@ module ife_commit_unit #(
 
     if (valid_in) begin
       for (int i = 0; i < NUM_REGS; i++) begin
-        if (result_core_0[i] !== result_core_1[i]) begin
+        if (result_core_0[i] != result_core_1[i]) begin
           mismatch = 1'b1;
         end
       end
