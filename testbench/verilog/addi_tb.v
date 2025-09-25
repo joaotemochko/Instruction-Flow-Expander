@@ -47,7 +47,14 @@ module addi_tb;
     block_id_in = 7'h01;
 
     // Espera DUT processar
-    repeat(50000) @(posedge clk);
+    @(posedge clk);
+    
+    block_valid   = 0;
+    
+    // Bloco 2: 4 instruções de 32 bits
+    block_data_in = {32'h00500513, 32'h00500513, 32'h00600593, 32'h00600593};
+    block_valid   = 1;
+    block_id_in = 7'h02;
 
     repeat(10000) @(posedge clk);
     $finish;

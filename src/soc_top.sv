@@ -20,6 +20,7 @@ parameter NUM_CORES = 3)(
   logic commit_valid;
   
   assign commit_valid = commit_ready0 & commit_ready1;
+  assign core_results = regfile;
 
   logic [NUM_CORES-1:0] core_busy;
 
@@ -33,7 +34,7 @@ parameter NUM_CORES = 3)(
 
   integer i;
   genvar j;
-  always @(posedge clk or negedge rst) begin
+  always_ff @(posedge clk or negedge rst) begin
     if (!rst) begin
       for (i = 0; i < NUM_CORES; i++) begin
         block_valid[i] <= 0;
@@ -63,6 +64,7 @@ parameter NUM_CORES = 3)(
           end else begin
               block_data[i] <= block_out_parallel[0];
               block_valid[i] <= dispatch_parallel[0];
+              break;
           end
           end
       end
