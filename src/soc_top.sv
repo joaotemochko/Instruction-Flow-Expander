@@ -16,8 +16,7 @@ parameter NUM_CORES = 3)(
   logic [3:0][31:0] serial_block_data;
   logic serial_valid;
 
-  logic [63:0] core_results0 [31:0];
-  logic [63:0] core_results1 [31:0];
+  logic [63:0] core_results[NUM_CORES-1:0] [0:31];
   logic commit_valid;
   
   assign commit_valid = commit_ready0 & commit_ready1;
@@ -57,14 +56,13 @@ parameter NUM_CORES = 3)(
       // --- Caso paralelo ---
       end else if (dispatch_parallel != 2'b00) begin
         if (!core_busy[i]) begin
-          if (block_data[i - 2] == block_out_parallel[0] && block_data[i - 1] == block_out_parallel[1]) begin
-            break;
-          end else if (block_data[i - 1] != 0) begin
-            block_data[i]  <= block_out_parallel[1];
-            block_valid[i] <= dispatch_parallel[1];
+          if (block_data[i - 1] != 0) begin
+              block_data[i]  <= block_out_parallel[1];
+              block_valid[i] <= dispatch_parallel[1];
+              break;
           end else begin
-            block_data[i] <= block_out_parallel[0];
-            block_valid[i] <= dispatch_parallel[0];
+              block_data[i] <= block_out_parallel[0];
+              block_valid[i] <= dispatch_parallel[0];
           end
           end
       end
@@ -80,8 +78,7 @@ parameter NUM_CORES = 3)(
     .ext_block_data(block_data_in),
     .ext_block_valid(block_valid_in),
     .core_busy(core_busy),
-    .core_result_0(core_results0),
-    .core_result_1(core_results1),
+    .core_result(core_results),
     .commit_valid_in(commit_valid),
     .serial_block_id(serial_block_id),
     .serial_block_data(serial_block_data),

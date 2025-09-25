@@ -2,7 +2,7 @@ module ife_top #(
   parameter BLOCK_ID_WIDTH = 8,
   parameter INSTR_WIDTH = 32,
   parameter BLOCK_SIZE = 4,
-  parameter NUM_CORES = 2,
+  parameter NUM_CORES = 3,
   parameter NUM_REGS = 32,
   parameter REG_WIDTH = 64
 )(
@@ -18,8 +18,7 @@ module ife_top #(
   input  wire [NUM_CORES-1:0] core_busy,
 
   // Resultados retornados dos núcleos paralelos
-  input  wire [REG_WIDTH-1:0] core_result_0 [NUM_REGS-1:0],
-  input  wire [REG_WIDTH-1:0] core_result_1 [NUM_REGS-1:0],
+  input  wire [REG_WIDTH-1:0] core_result [NUM_CORES-1:0][0:NUM_REGS-1],
   input  wire commit_valid_in,
 
   // Saída para caminho serial (fallback)
@@ -63,7 +62,8 @@ module ife_top #(
   ife_block_queue #(
     .BLOCK_ID_WIDTH(BLOCK_ID_WIDTH),
     .INSTR_WIDTH(INSTR_WIDTH),
-    .BLOCK_SIZE(BLOCK_SIZE)
+    .BLOCK_SIZE(BLOCK_SIZE),
+    .NUM_CORES(NUM_CORES)
   ) u_block_queue (
     .clk(clk), .rst_n(rst),
     .block_id_in(ext_block_id),
@@ -103,13 +103,13 @@ module ife_top #(
   ife_commit_unit #(
     .BLOCK_ID_WIDTH(BLOCK_ID_WIDTH),
     .NUM_REGS(NUM_REGS),
-    .REG_WIDTH(REG_WIDTH)
+    .REG_WIDTH(REG_WIDTH),
+    .NUM_CORES(NUM_CORES)
   ) u_commit (
     .clk(clk), .rst(rst),
     .valid_in(commit_valid_in),
     .block_id(block_id_parallel),
-    .result_core_0(core_result_0),
-    .result_core_1(core_result_1),
+    .result_core(core_result),
     .commit_ok(commit_ok),
     .commit_fail(commit_fail),
     .reexecute_serial(reexecute_serial)

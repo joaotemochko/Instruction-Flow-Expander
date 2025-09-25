@@ -2,7 +2,7 @@
 
 module ife_dispatch_unit #(
   parameter int BLOCK_SIZE = 4,
-  parameter int NUM_CORES  = 2
+  parameter int NUM_CORES  = 3
 )(
   input  logic clk,
   input  logic rst,
