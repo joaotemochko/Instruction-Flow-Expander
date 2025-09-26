@@ -24,7 +24,7 @@ module ife_dispatch_unit #(
   integer i;
 
   always_comb begin
-    for (i = 0; i < NUM_CORES; i++) begin
+    for (i = 0; i < 2; i++) begin
       dispatch_valid[i]     = 1'b0;
       dispatch_data[i]      = '0;
       dispatch_block_id  = '0;

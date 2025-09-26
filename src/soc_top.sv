@@ -39,12 +39,7 @@ parameter NUM_CORES = 3)(
       for (i = 0; i < NUM_CORES; i++) begin
         block_valid[i] <= 0;
        end
-    end else begin
-      // valores default
-      for (i = 0; i < NUM_CORES; i++) begin
-        block_valid[i] <= 0;
-      end
-      
+    end else begin    
       for (i = 0; i < NUM_CORES; i++) begin
       // --- Caso serial ---
        if (serial_valid) begin
@@ -64,7 +59,6 @@ parameter NUM_CORES = 3)(
           end else begin
               block_data[i] <= block_out_parallel[0];
               block_valid[i] <= dispatch_parallel[0];
-              break;
           end
           end
       end
